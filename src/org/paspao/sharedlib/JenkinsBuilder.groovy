@@ -9,9 +9,8 @@ class JenkinsBuilder {
     private final String projectName
     private final String branchName
     private String agentName
-    private String mavenVersion
+    private String gradleVersion
     private String jdkVersion
-    private String nodeVersion
 
     JenkinsBuilder(def script, String projectName, String branchName) {
         this.script = script
@@ -19,22 +18,13 @@ class JenkinsBuilder {
         this.branchName = branchName
     }
 
-    JenkinsBuilder withMavenVersion(String mavenVersion) {
-        this.mavenVersion = mavenVersion
+    JenkinsBuilder withGradleVersion(String gradleVersion) {
+        this.gradleVersion = gradleVersion
         return this
     }
 
     JenkinsBuilder withJdkVersion(String jdkVersion) {
         this.jdkVersion = jdkVersion
-        return this
-    }
-    JenkinsBuilder withNodeVersion(String nodeVersion) {
-        this.nodeVersion = nodeVersion
-        return this
-    }
-
-    JenkinsBuilder withAgent(String agent) {
-        this.agentName = agent
         return this
     }
 
@@ -43,29 +33,19 @@ class JenkinsBuilder {
         pipeline {
             node {
                 try {
-                    maven()
+                    gradle()
                     jdk()
-                    nodeEnv()
 
                     stage('Checkout') {
                         ansiColor {
                             checkout()
                         }
                     }
-                    if(mavenVersion) {
-                        stage('Build Maven') {
+                    if(gradleVersion) {
+                        stage('Build Gradle') {
                             ansiColor {
 
-                                mavenBuild()
-
-                            }
-                        }
-                    }
-                    if(nodeVersion) {
-                        stage('Build Node') {
-                            ansiColor {
-
-                                nodeBuild()
+                                GradleBuild()
 
                             }
                         }
@@ -84,93 +64,35 @@ class JenkinsBuilder {
     def checkout() {
         script.checkout(script.scm)
     }
+}
 
     @PackageScope
-    def stage(String title, Closure closure) {
-        script.stage(title) {
-            closure.call()
+    def gradle() {
+        if (gradleVersion) {
+            script.tool(type: 'gradle', name: gradleVersion)
         }
     }
 
     @PackageScope
-    def node(String label = null, Closure closure) {
-        if (label) {
-            script.node(label) {
-                closure.call()
-            }
-        } else {
-            script.node {
-                closure.call()
-            }
-        }
-    }
-
-    @PackageScope
-    def ansiColor(Closure closure) {
-        script.timestamps {
-            script.ansiColor('xterm') {
-                closure.call()
-            }
-        }
-    }
-
-    @PackageScope
-    def pipeline(Closure closure) {
-
-        script.pipeline {
-            closure.call()
-        }
-
-    }
-
-    @PackageScope
-    def maven() {
-        if (mavenVersion) {
-            script.tool(type: 'maven', name: mavenVersion)
-        }
-    }
-
-    @PackageScope
-    def mavenBuild()
+    def gradleBuild()
     {
-        if (mavenVersion) {
-            script.withMaven(
-                    // Maven installation declared in the Jenkins "Global Tool Configuration"
-                    maven: mavenVersion, jdk: jdkVersion) {
+        if (gradleVersion) {
+            script.withGradle(
+                    // gradle installation declared in the Jenkins "Global Tool Configuration"
+                    gradle: mavenVersion, jdk: jdkVersion) {
 
-                // Run the maven build
-                script.sh "mvn clean package"
-
-            }
-        }
-    }
-
-    @PackageScope
-    def nodeBuild()
-    {
-        if (nodeVersion) {
-            script.nodejs(
-                    nodeJSInstallationName: nodeVersion) {
-
-
-                script.sh "npm install"
-                script.sh "npm run-script build"
+                // Run the gradle build
+                script.sh "gradle build"
 
             }
         }
     }
+
 
     @PackageScope
     def jdk() {
         if (jdkVersion) {
             script.tool(type: 'jdk', name: jdkVersion)
-        }
-    }
-
-    @PackageScope
-    def nodeEnv() {
-        if (nodeVersion) {
-            script.tool(type: 'nodejs', name: nodeVersion)
         }
     }
 
