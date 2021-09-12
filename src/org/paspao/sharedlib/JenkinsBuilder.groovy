@@ -35,12 +35,6 @@ class JenkinsBuilder {
                 try {
                     gradle()
                     jdk()
-
-                    stage('Checkout') {
-                        ansiColor {
-                            checkout()
-                        }
-                    }
                     if(gradleVersion) {
                         stage('Build Gradle') {
                             ansiColor {
