@@ -37,19 +37,11 @@ class JenkinsBuilder {
                     jdk()
                     if(gradleVersion) {
                         stage('Build Gradle') {
-                            ansiColor {
-
                                 GradleBuild()
-
-                            }
                         }
                     }
-                } finally {
-                    script.chuckNorris()
-                }
+                } 
             }
-
-
         }
     }
 
