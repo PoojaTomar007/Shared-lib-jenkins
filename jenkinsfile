@@ -6,7 +6,7 @@ pipeline {
         stage('Build') {
             steps {
                 execGradle '--help'
-                execGradle()
+                execGradle() 'build'
             }
         }    
     }
